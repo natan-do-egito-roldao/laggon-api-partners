@@ -23,7 +23,7 @@ exports.createOrder = async (req, res) => {
     });
 
     await newOrder.save();
-    console.log('here')
+
     const payload = newOrder;
 
     axios.post(url, newOrder, {
