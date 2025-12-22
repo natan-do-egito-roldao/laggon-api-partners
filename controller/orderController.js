@@ -22,38 +22,45 @@ exports.createOrder = async (req, res) => {
       about: about
     });
 
-    await newOrder.save();
+    const oldOrder = await Order.find();
+    const count = 0;
+    let pass = 0;
 
-    const payload = newOrder;
-
-    axios.post(url, newOrder, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => {
-      console.log('Webhook enviado com sucesso!');
-      console.log(response.data);
-    })
-    .catch(error => {
-      console.error('Erro ao enviar webhook:', error.response?.data || error.message);
-    });
-
-    res.status(200).json()
-
+    while (count <= oldOrder.length) {
+      const arrayOrder = oldOrder[count]
+      if (arrayOrder.email !== newOrder.email || arrayOrder.plan !== newOrder.plan || arrayOrder.number !== newOrder.number) {
+        pass = 1
+        break
+      };
+      count + 1;
+    }
+    if (pass = 1) {
+      const payload = newOrder;
+      await newOrder.save();
+      axios.post(url, newOrder, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        console.log('Webhook enviado com sucesso!');
+      })
+      .catch(error => {
+        console.error('Erro ao enviar webhook:', error.response?.data || error.message);
+      });
+      res.status(200).json()
+    } else{
+      res.status(409).json()
+    };
   } catch (error) {
-
     res.status(400).json(error);
-
   }
 };
 
 exports.getOrders = async (req, res) => {
   try{
     const orders = await Order.find()
-
     res.status(200).json(orders)
-
   } catch (erro) {
 
   };
