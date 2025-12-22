@@ -9,8 +9,6 @@ exports.createOrder = async (req, res) => {
 
     const existingOrder = await Order.findOne({email, number, plan});
 
-    console.log(existingOrder);
-
     if (existingOrder){
       return res.status(409).json();
     };
@@ -22,26 +20,33 @@ exports.createOrder = async (req, res) => {
     let saveOrder;
 
     if (doubleExistingOrder) {
-      saveOrder = {
-        name: name,
-        origin: origin,
-        number: number,
-        email: email,
-        plan: plan, 
-        date: new Date(),
-        about: about,
-        correct: true
-      };
+      const updateOrder = await Order.findByIdAndUpdate(
+        doubleExistingOrder._id,
+        {
+          name,
+          email,
+          number,
+          plan,
+          about,
+          origin,
+          date: new Date()
+        },
+        {
+          new: true
+        }
+      );
+
     } else {
-      saveOrder = {
-        name: name,
-        origin: origin,
-        number: number,
-        email: email, 
-        plan: plan, 
+      saveOrder = await Order.create({
+        name,
+        email,
+        number,
+        plan,
+        about,
+        origin,
         date: new Date(),
-        about: about
-      };
+        correct: true
+      })
     };
 
     const payload = saveOrder;
@@ -57,11 +62,7 @@ exports.createOrder = async (req, res) => {
     .catch(error => {
       console.error('Erro ao enviar webhook:', error.response?.data || error.message);
     });
-
-    await Order.findOneAndDelete({"correct": false});
-    const passOrder = await Order.create(saveOrder);
-
-    return res.status(200).json(payload);
+    return res.status(200).json();
 
   } catch (err) {
     return res.status(400).json(err.message);
