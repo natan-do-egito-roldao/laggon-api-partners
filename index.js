@@ -7,19 +7,30 @@ const orderRoutes = require("./routes/orderRoutes");
 
 const app = express();
 
-// ✅ 1. CORS (UMA VEZ)
+// 1️⃣ CORS base
 app.use(cors({ origin: "*" }));
 
-// ✅ 2. parsers
+// 2️⃣ PRE-FLIGHT FIX (Express 5 🔥)
+app.use((req, res, next) => {
+  if (req.method === "OPTIONS") {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    return res.sendStatus(204);
+  }
+  next();
+});
+
+// 3️⃣ Body parser
 app.use(express.json());
 
-// ✅ 3. rotas
+// 4️⃣ Rotas
 app.use("/api/orders", orderRoutes);
 
 // Mongo
 mongoose.connect(process.env.ACESS)
-  .then(() => console.log("MongoDB conectado com sucesso"))
-  .catch(err => console.error("Erro ao conectar MongoDB:", err));
+  .then(() => console.log("MongoDB conectado"))
+  .catch(console.error);
 
 // Porta
 const PORT = process.env.PORT || 3000;
