@@ -13,9 +13,9 @@ app.use(cors({
 }));
 
 // 2. parsers
-app.use(express.json());
-app.use(cors({ origin: "*" }));
 
+app.use(cors({ origin: "*" }));
+app.use(express.json());
 
 // 3. rotas
 app.use("/api/orders", orderRoutes);
