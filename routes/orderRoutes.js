@@ -8,4 +8,10 @@ router.get('/', orderController.getOrders);
 //router.put('/:id', orderController.updateOrder);
 //router.delete('/:id', orderController.deleteOrder);
 
+router.post("/a", (req, res) => {
+  console.log("BODY:", req.body);
+  res.status(201).json({ ok: true });
+});
+
+
 module.exports = router;
