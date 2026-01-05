@@ -2,92 +2,84 @@ const Order = require('../schemas/order');
 const axios = require('axios');
 
 exports.createOrder = async (req, res) => {
-  console.log('body enviado: ', req.body);
   try {
-    const url = 'https://new-backend.botconversa.com.br/api/v1/webhooks-automation/catch/105669/rECYcMmhelvo/'
+    const url = 'https://new-backend.botconversa.com.br/api/v1/webhooks-automation/catch/105669/rECYcMmhelvo/';
 
-    const {name, number, email, plan, about, correct} = req.body;
+    const { name, number, email, plan, about } = req.body;
+    let phone = String(number).trim();
+    if (!phone.startsWith("55")) {
+        phone = "55" + phone
+    }
+    console.log(phone)
 
-    const existingOrder = await Order.findOne({email, number, plan});
+    const aboutSafe = about?.trim() || 'não informado';
 
-    if (existingOrder){
-      return res.status(409).json();
-    };
-
-    const doubleExistingOrder = await Order.findOne({
-      $or: [{email}, {number}, {plan}]
+    // 🔑 identidade da pessoa
+    const existingContact = await Order.findOne({
+      $or: [{ email }, { number }]
     });
 
     let saveOrder;
 
-    const aboutSafe = about && about.trim() !== "" 
-      ? about 
-      : "não informado";
-
-    if (doubleExistingOrder) {
+    if (existingContact) {
+      // 🔁 atualização
       saveOrder = await Order.findByIdAndUpdate(
-        doubleExistingOrder._id,
+        existingContact._id,
         {
           name,
           email,
-          number,
+          number: phone,
           plan,
           about: aboutSafe,
           date: new Date(),
-          correct
+          correct: true
         },
         { new: true }
       );
-
-
     } else {
+      // 🆕 criação
       saveOrder = await Order.create({
         name,
         email,
-        number,
+        number: phone,
         plan,
-        about,
+        about: aboutSafe,
         date: new Date(),
-        correct: 'true'
-      })
-    };
+        correct: false
+      });
+    }
+
     const payload = {
       name: saveOrder.name,
       email: saveOrder.email,
-      phone: saveOrder.number, // ajuste para o campo que o BotConversa espera
+      phone: saveOrder.number,
       plan: saveOrder.plan,
       about: saveOrder.about,
-      correct: String(saveOrder.correct)
+      correct: saveOrder.correct // boolean
     };
 
-    console.log("payload carregado: ",payload)
+    console.log('payload enviado:', payload);
 
-    axios.post(url, payload, {
+    await axios.post(url, payload, {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       }
-    })
-    .then(response => {
-      console.log('Webhook enviado com sucesso!');
-    })
-    .catch(error => {
-      console.error('Erro ao enviar webhook:', error.response?.data || error.message);
     });
-    return res.status(200).json();
+
+    return res.status(200).json({ success: true });
 
   } catch (err) {
-    return res.status(400).json(err.message);
+    console.error(err);
+    return res.status(400).json({ error: err.message });
   }
 };
 
 exports.getOrders = async (req, res) => {
-  try{
-    const orders = await Order.find()
-
+  try {
+    const orders = await Order.find();
     return res.status(200).json(orders);
-
   } catch (erro) {
     return res.status(400).json();
-  };
+  }
 };
