@@ -20,6 +20,10 @@ exports.createOrder = async (req, res) => {
 
     let saveOrder;
 
+    const aboutSafe = about && about.trim() !== "" 
+      ? about 
+      : "não informado";
+
     if (doubleExistingOrder) {
       saveOrder = await Order.findByIdAndUpdate(
         doubleExistingOrder._id,
@@ -28,14 +32,13 @@ exports.createOrder = async (req, res) => {
           email,
           number,
           plan,
-          about,
+          about: aboutSafe,
           date: new Date(),
           correct
         },
-        {
-          new: true
-        }
+        { new: true }
       );
+
 
     } else {
       saveOrder = await Order.create({
