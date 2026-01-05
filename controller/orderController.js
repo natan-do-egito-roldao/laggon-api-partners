@@ -2,7 +2,7 @@ const Order = require('../schemas/order');
 const axios = require('axios');
 
 exports.createOrder = async (req, res) => {
-  console.log(req.body); // 👈 veja se chega
+  console.log('body enviado: ', req.body);
   try {
     const url = 'https://new-backend.botconversa.com.br/api/v1/webhooks-automation/catch/105669/rECYcMmhelvo/'
 
@@ -59,7 +59,8 @@ exports.createOrder = async (req, res) => {
       about: saveOrder.about,
       correct: String(saveOrder.correct)
     };
-    console.log(payload)
+
+    console.log("payload carregado: ",payload)
 
     axios.post(url, payload, {
       headers: {
