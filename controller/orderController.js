@@ -6,7 +6,7 @@ exports.createOrder = async (req, res) => {
   try {
     const url = 'https://new-backend.botconversa.com.br/api/v1/webhooks-automation/catch/105669/U3RHJPkINbMo/'
 
-    const {name, number, email, plan, about, origin} = req.body;
+    const {name, number, email, plan, about, correct} = req.body;
 
     const existingOrder = await Order.findOne({email, number, plan});
 
@@ -21,7 +21,7 @@ exports.createOrder = async (req, res) => {
     let saveOrder;
 
     if (doubleExistingOrder) {
-      const updateOrder = await Order.findByIdAndUpdate(
+      saveOrder = await Order.findByIdAndUpdate(
         doubleExistingOrder._id,
         {
           name,
@@ -29,8 +29,8 @@ exports.createOrder = async (req, res) => {
           number,
           plan,
           about,
-          origin,
-          date: new Date()
+          date: new Date(),
+          correct
         },
         {
           new: true
@@ -44,17 +44,24 @@ exports.createOrder = async (req, res) => {
         number,
         plan,
         about,
-        origin,
         date: new Date(),
-        correct: true
+        correct: 'true'
       })
     };
-
-    const payload = saveOrder;
+    const payload = {
+      name: saveOrder.name,
+      email: saveOrder.email,
+      phone: saveOrder.number, // ajuste para o campo que o BotConversa espera
+      plan: saveOrder.plan,
+      about: saveOrder.about,
+      correct: String(saveOrder.correct)
+    };
+    console.log(payload)
 
     axios.post(url, payload, {
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     })
     .then(response => {
